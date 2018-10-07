@@ -1,3 +1,14 @@
 Rails.application.routes.draw do
-  # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
+
+ # get 'welcome/index'   
+  
+  #get '/rooms', to: 'room#index', as: 'button'
+
+ # root 'welcome#index'
+  namespace 'api' do
+  	resources :rooms
+  	resources :reservations
+  	resources :availables
+  end
+
 end
