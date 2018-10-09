@@ -6,42 +6,44 @@ module Api
 
         if params[:show_availabilty] == "true"
 
-               @rooms= Room.joins(:reservations,:availables)
-                     .select('rooms.id, availables.starting_date, availables.ending_date, reservations.checkin_date , reservations.checkout_date')
-                     .where("reservations.room_id = availables.room_id")
-                     .order('id, reservations.checkin_date')
+               json = { "data" => []}
+               number_of_rooms=Available.pluck(:room_id).uniq
+                #loop on the number of rooms available 
+                number_of_rooms.size.times do |j|
 
-         i=0 
-         id=@rooms[0].id
-         number_of_rooms= Room.joins(:availables).size+@rooms.length
-         starting_date = @rooms[0].starting_date;
-         last_available_date=""
-         json = { "data" => []}
-              
-            #iterates  
-             number_of_rooms.times do  
-            puts i
-            if i < @rooms.length
-                 if id == @rooms[i].id
-                last_available_date =@rooms[i].ending_date
-                ending_date= @rooms[i].checkin_date;
-              json["data"].push({:id =>id, :available_date_start =>starting_date ,:available_date_end =>ending_date})
-              starting_date =@rooms[i].checkout_date;
-                   
-               else
-                
-                  json["data"].push({:id =>id, :available_date_start =>starting_date ,:available_date_end =>last_available_date})
-                  id=@rooms[i].id
-                  starting_date=@rooms[i].starting_date;
-                   i=i-1  
-                end 
-                     i=i+1  
-                     else
-                    json["data"].push({:id =>id, :available_date_start =>starting_date ,:available_date_end =>last_available_date})
-                   end 
-               end 
-        
-             render json: {status: 'SUCCESS', message: 'Loaded Available Rooms',data:json}, status: :ok
+               available =  Available.where(:room_id => number_of_rooms[j])
+               reservations= Reservation.where(:room_id => number_of_rooms[j])
+               room =Room.where(:id => number_of_rooms[j]);
+               room_number=room[0].room_number
+               room_capacity=room[0].room_capacity
+               room_id=number_of_rooms[j]
+                k=0
+                #looping on 
+               available.size.times do |i|
+                start_available_time=available[i].starting_date
+                ending_available_time=available[i].ending_date
+               
+                while k < reservations.size + 1  do
+               
+                  if (k < reservations.size) && (reservations[k].checkin_date <  ending_available_time )
+                      json["data"].push({:id =>room_id , :room_number =>room_number ,:room_capacity => room_capacity,:available_start_date =>start_available_time ,:available_end_date =>reservations[k].checkin_date})
+                      start_available_time=reservations[k].checkout_date
+                      k=k+1
+                   else
+                      json["data"].push({:id =>room_id , :room_number =>room_number ,:room_capacity => room_capacity,:available_start_date =>start_available_time ,:available_end_date =>ending_available_time})
+                      break;
+                  end
+
+                end
+                 
+               end
+              end
+              remaining_rooms_number= Room.where.not(id: number_of_rooms)
+              remaining_rooms_number.size.times do |i|
+                 json["data"].push({:id => remaining_rooms_number[i].id, :room_number =>remaining_rooms_number[i].room_number ,:room_capacity => remaining_rooms_number[i].room_capacity,:available => "No Avalibility Dates" })
+            
+            end
+             render json: {status: 'SUCCESS', message: 'Loaded all Rooms with Avalibilities',data: json}, status: :ok
       
         else
               rooms = Room.order('created_at DESC');
@@ -68,8 +70,38 @@ module Api
         room = Room.find(params[:id])
         render json: {status: 'SUCCESS', message: 'Loaded Rooms',data:room}, status: :ok
       else
-      end
+            json = { "data" => []}
+               available =  Available.where(:room_id =>params[:id])
+               reservations= Reservation.where(:room_id =>params[:id])
+               room =Room.where(:id => params[:id])
 
+               room_number=room[0].room_number
+               room_capacity=room[0].room_capacity
+               room_id=room[0].id
+                k=0
+                #looping on 
+               available.size.times do |i|
+                start_available_time=available[i].starting_date
+                ending_available_time=available[i].ending_date
+               
+                while k < reservations.size + 1  do
+               puts k
+                  if (k < reservations.size) && (reservations[k].checkin_date <  ending_available_time )
+                      json["data"].push({:id =>room_id , :room_number =>room_number ,:room_capacity => room_capacity,:available_start_date =>start_available_time ,:available_end_date =>reservations[k].checkin_date})
+                      start_available_time=reservations[k].checkout_date
+                      k=k+1
+                   else
+                      json["data"].push({:id =>room_id , :room_number =>room_number ,:room_capacity => room_capacity,:available_start_date =>start_available_time ,:available_end_date =>ending_available_time})
+                      break;
+                  end
+                      
+                end
+               end
+              #end
+               render json: {status: 'SUCCESS', message: 'Loaded Required Room',data: json}, status: :ok
+        #end of showparam if       
+      end
+ #end of def
        end
 
 
