@@ -85,7 +85,6 @@ module Api
                 ending_available_time=available[i].ending_date
                
                 while k < reservations.size + 1  do
-               puts k
                   if (k < reservations.size) && (reservations[k].checkin_date <  ending_available_time )
                       json["data"].push({:id =>room_id , :room_number =>room_number ,:room_capacity => room_capacity,:available_start_date =>start_available_time ,:available_end_date =>reservations[k].checkin_date})
                       start_available_time=reservations[k].checkout_date
@@ -97,7 +96,6 @@ module Api
                       
                 end
                end
-              #end
                render json: {status: 'SUCCESS', message: 'Loaded Required Room',data: json}, status: :ok
         #end of showparam if       
       end
@@ -116,7 +114,7 @@ module Api
         
           end
          end
- 
+
       private
       def room_params
         params.permit(:room_number , :room_capacity , :roomtype)
