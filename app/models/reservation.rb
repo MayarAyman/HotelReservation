@@ -1,3 +1,5 @@
 class Reservation < ApplicationRecord
-	belongs_to :rooms
+	validates :checkin_date, presence: true
+	validates :checkout_date, presence: true
+	belongs_to :room
 end
